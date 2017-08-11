@@ -15,7 +15,7 @@ defmodule Scraper.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger]]
+    [extra_applications: [:logger, :timex]]
   end
 
   # Dependencies can be Hex packages:
@@ -32,6 +32,7 @@ defmodule Scraper.Mixfile do
      {:floki, "~> 0.17.0"},
      {:html5ever, "~> 0.3.0"},
      {:couchdb_connector, "~> 0.5.0"},
-     {:poison, "~> 3.1"}]
+     {:poison, "~> 3.1"},
+     {:timex, "~> 3.1"}]
   end
 end
