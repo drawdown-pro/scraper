@@ -22,3 +22,6 @@ The strategy to seed the initial platform database is to scrape the [solution su
 
     $ elixir -S mix run -e Scraper.run
 
+### license
+
+[Licensed](./LICENSE.txt) under [ISC](https://www.isc.org/downloads/software-support-policy/isc-license/)

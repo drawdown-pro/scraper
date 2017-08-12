@@ -48,9 +48,9 @@ defmodule Scraper do
         case find_by_rank(solution[:rank]) do
           {:ok, %{"docs" => []}} ->
             case Couchdb.Connector.Writer.create_generate(Application.get_env(:scraper, :db), Poison.encode!(solution)) do
-              {:ok, _} ->
+              {:ok, _, _} ->
                 "Added."
-              {:error, body} ->
+              {:error, body, _} ->
                 "ERROR: #{body}"
             end
           {:ok, _} ->
