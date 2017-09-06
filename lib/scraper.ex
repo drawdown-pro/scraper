@@ -23,41 +23,44 @@ defmodule Scraper do
 
   def extract_solution_data(cells) do
     solution_url = Floki.attribute(Floki.find(cells, "a"), "href")
-    List.zip([[:rank, :solution, :sector, :reduction, :cost, :savings], cells])
-      |> Enum.reduce(%{solution_url: solution_url}, fn(cell, data) ->
+    List.zip([[:rank, :title, :sector, :reduction, :cost, :savings], cells])
+      |> Enum.reduce(%{urls: solution_url}, fn(cell, data) ->
           Map.put(data, elem(cell,0), extract_cell_text(cell))
         end)
   end
 
-  def run_mango_query(query) do
-    db_url = Couchdb.Connector.UrlHelper.database_url(Application.get_env(:scraper, :db))
-    HTTPoison.post!("#{db_url}/_find", query, [Couchdb.Connector.Headers.json_header()])
-      |> Couchdb.Connector.ResponseHandler.handle_get
+  # def run_mango_query(query) do
+  #   db_url = Couchdb.Connector.UrlHelper.database_url(Application.get_env(:scraper, :db))
+  #   HTTPoison.post!("#{db_url}/_find", query, [Couchdb.Connector.Headers.json_header()])
+  #     |> Couchdb.Connector.ResponseHandler.handle_get
+  # end
+
+  # def find_by_rank(rank, storage) do
+  #   {result, body} = run_mango_query("{\"selector\":{\"rank\":#{rank}}}")
+  #   {result, Poison.decode!(body)}
+  # end
+
+  def insert_solution({:ok, nil}, storage, solution) do
+    {_, msg} = storage.save_solution(solution)
+    msg
   end
 
-  def find_by_rank(rank) do
-    {result, body} = run_mango_query("{\"selector\":{\"rank\":#{rank}}}")
-    {result, Poison.decode!(body)}
+  def insert_solution({:ok, _}, _, _) do
+    "Solution exists."
   end
 
-  def process_solutions(cells) do
+  def insert_solution({:error, msg}, _, _) do
+    "ERROR looking up solution: #{msg}"
+  end
+
+  def process_solutions(cells, storage) do
     Enum.chunk(cells, 6)
       |> Enum.map(&(extract_solution_data(&1)))
       |> Enum.map(fn(solution) ->
-        "#{solution[:rank]} - #{solution[:solution]}\n> " <>
-        case find_by_rank(solution[:rank]) do
-          {:ok, %{"docs" => []}} ->
-            case Couchdb.Connector.Writer.create_generate(Application.get_env(:scraper, :db), Poison.encode!(solution)) do
-              {:ok, _, _} ->
-                "Added."
-              {:error, body, _} ->
-                "ERROR: #{body}"
-            end
-          {:ok, _} ->
-            "Solution exists."
-          {:error, body} ->
-            "ERROR looking up solution: #{body}"
-        end |> IO.puts 
+        IO.puts "#{solution[:rank]} - #{solution[:title]}\n> "
+        storage.find_solution_by_rank(solution[:rank])
+          |> insert_solution(storage, solution)
+          |> IO.puts
         IO.puts String.duplicate("-", 80)
       end)
   end
@@ -73,15 +76,17 @@ defmodule Scraper do
   """
 
   def run do
+    storage = Application.get_env(:scraper, :storage)
+    storage.initialize
     url = "http://www.drawdown.org/solutions-summary-by-rank"
     body = HTTPoison.get!(url, []).body
-    File.write("./solutions-summary-by-rank-#{Timex.format!(Timex.local, "{ISOdate}")}.html", body, [:utf8])
+    File.write("./log/solutions-summary-by-rank-#{Timex.format!(Timex.local, "{ISOdate}")}.html", body, [:utf8])
     solution_rows = Floki.find(body, "div.solutions-table")
 
     solution_rows
       |> Floki.raw_html
       |> Floki.find("tr td")
-      |> process_solutions
+      |> process_solutions(storage)
   end
 end
 

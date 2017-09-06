@@ -28,11 +28,12 @@ defmodule Scraper.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:httpoison, "~> 0.11.1"},
-     {:floki, "~> 0.17.0"},
-     {:html5ever, "~> 0.3.0"},
+    [{:httpoison, "~> 0.13"},
+     {:floki, "~> 0.18.0"},
+     {:html5ever, "~> 0.5.0"},
      {:couchdb_connector, "~> 0.5.0"},
      {:poison, "~> 3.1"},
-     {:timex, "~> 3.1"}]
+     {:timex, "~> 3.1"},
+     {:neuron, git: "git://github.com/bmoelk/neuron"}]
   end
 end

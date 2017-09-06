@@ -7,7 +7,10 @@ The strategy to seed the initial platform database is to scrape the [solution su
 #### technology
 
 * elixir
-* couchdb 2.1.0+ / cloudant
+* storage engines
+    * couchdb 2.1.0+ / pouchdb / cloudant
+    * graph.cool
+    * postgresql (pending)
 
 #### build
 
